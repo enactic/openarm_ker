@@ -1,0 +1,80 @@
+# Copyright 2026 Enactic, Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+left_arm_mappings:
+  # --- Joint 1 ---
+  - leader: arm_joint1
+    follower: openarm_joint1
+    sign: 1.0
+    scale: 1.0
+    offset: 0.95993
+    mech_limits: [-3.48888, 1.396263]
+
+  # --- Joint 2 ---
+  - leader: arm_joint2
+    follower: openarm_joint2
+    sign: 1.0
+    scale: 1.0
+    offset: 0.349065
+    mech_limits: [-3.316125, 0.174533]
+
+  # --- Joint 3 ---
+  - leader: arm_joint3
+    follower: openarm_joint3
+    sign: 1.0
+    scale: 1.0
+    offset: -1.18944
+    mech_limits: [-1.570796, 1.570796]
+
+  # --- Joint 4 ---
+  - leader: arm_joint4
+    follower: openarm_joint4
+    sign: 1.0
+    scale: 1.0
+    offset: -2.12232
+    mech_limits: [0.0, 2.443461]
+
+  # --- Joint 5 ---
+  - leader: arm_joint5
+    follower: openarm_joint5
+    sign: 1.0
+    scale: 1.0
+    offset: 1.128355
+    mech_limits: [-1.570796, 1.570796]
+
+  # --- Joint 6 ---
+  - leader: arm_joint6
+    follower: openarm_joint6
+    sign: 1.0
+    scale: 1.0
+    offset: 0.397411
+    mech_limits: [-0.785398, 0.785398]
+
+  # --- Joint 7 ---
+  - leader: arm_joint7
+    follower: openarm_joint7
+    sign: 1.0
+    scale: 1.0
+    offset: 1.571
+    mech_limits: [-1.570796, 1.570796]
+
+  # --- Joint 8 ---
+  - leader: arm_joint8
+    follower: openarm_gripper
+    sign: 1.0
+    scale: 1.0
+    offset: 0.0
+    open_range: [0.8, -0.3]
+    mech_limits: [-0.1, 1.5707996]
+    leader_range: [0.0, 0.96]
