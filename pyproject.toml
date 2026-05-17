@@ -23,14 +23,18 @@ version = "0.1.0"
 authors = [{name = "Enactic, Inc."}]
 license = {text = "Apache-2.0"}
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 
 dependencies = [
     "numpy>=1.20.0",
     "PyYAML>=5.4.0",
+    "pyusb",
     "pyserial",
     "openarm-can>=0.1.0",
 ]
+
+[project.scripts]
+ker-cli = "openarm_ker.cli:main"
 
 [project.urls]
 changelog = "https://github.com/enactic/openarm_ker/releases"
