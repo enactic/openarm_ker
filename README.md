@@ -61,12 +61,13 @@ Add a rule like this, replacing `xxxx`, `yyyy`, and `zzzz` with your device's
 actual values:
 
 ```udev
-SUBSYSTEM=="tty", ATTRS{idVendor}=="xxxx", ATTRS{idProduct}=="yyyy", ATTRS{serial}=="zzzz", SYMLINK+="m5_ker_485", GROUP="dialout", MODE="0660"
+SUBSYSTEM=="tty", ENV{ID_VENDOR_ID}=="xxxx", ENV{ID_MODEL_ID}=="yyyy", ENV{ID_SERIAL_SHORT}=="zzzz", SYMLINK+="m5_ker_485", GROUP="dialout", MODE="0660"
 ```
 
 If you do not need to distinguish between multiple devices of the same model,
-you can omit `ATTRS{serial}=="zzzz"`. For a personal development machine, you can instead
-use `MODE="0666"` and omit `GROUP` to allow all local users to access it.
+you can omit `ENV{ID_SERIAL_SHORT}=="zzzz"`. For a personal development machine,
+you can instead use `MODE="0666"` and omit `GROUP` to allow all local users to
+access it.
 
 Reload the rules:
 
@@ -82,7 +83,6 @@ ls -l /dev/m5_ker_485
 ```
 
 You can then use `/dev/m5_ker_485` as the serial device path.
-
 
 ### Sample usage
 

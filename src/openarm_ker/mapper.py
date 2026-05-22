@@ -28,13 +28,13 @@ class Mapper:
 
     def __init__(
         self,
-        mappingyaml_path: str,
+        mappingyaml_path: str | Path,
         leader_joint_names: list[str],
         mapping_key: str,
     ):
         """Initialize joint mapper."""
         # Load YAML configuration
-        mappingyaml_resource = self._resolve_mappingyaml_path(mappingyaml_path)
+        mappingyaml_resource = self._resolve_path(mappingyaml_path)
         with importlib.resources.as_file(mappingyaml_resource) as mappingyaml_file:
             with mappingyaml_file.open() as f:
                 full_config = yaml.safe_load(f)
@@ -85,7 +85,7 @@ class Mapper:
         self.TWO_PI = 2 * np.pi
 
     @staticmethod
-    def _resolve_mappingyaml_path(mappingyaml_path: str | Path):
+    def _resolve_path(mappingyaml_path: str | Path):
         """Resolve a user path or bundled config filename."""
         path = Path(mappingyaml_path)
         if path.exists():
