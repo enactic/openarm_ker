@@ -5,7 +5,7 @@ A teleoperation system for OpenArm robots using KER (Kinematic Equivalent Replic
 ## Features
 
 - **Joint mapping**: Flexible configuration-based mapping from leader to follower joints
-- **Serial communication**: Interface with m5stack-cores3 via uart
+- **Serial communication**: Interface with M5Stack CoreS3 over UART
 
 ## Quick start
 
@@ -15,6 +15,75 @@ A teleoperation system for OpenArm robots using KER (Kinematic Equivalent Replic
 pip install openarm_ker
 ```
 
+### Serial device permissions
+
+On Linux, serial devices such as `/dev/ttyACM0` are usually owned by the
+`dialout` group. Add your user to that group, then log out and log back in.
+If you run the examples from VS Code or another terminal, restart that program
+so it picks up the new group permissions.
+
+```bash
+sudo usermod -aG dialout "$USER"
+```
+
+For a temporary test, you can also relax the permission of the current device
+node directly:
+
+```bash
+sudo chmod 666 /dev/ttyACM0
+```
+
+This usually resets after the device is unplugged or the device node is
+recreated.
+
+To use a stable device name such as `/dev/m5_ker_485`, create a udev rule.
+First inspect the device properties:
+
+```bash
+udevadm info -q property -n /dev/ttyACM0
+```
+
+Record fields like these:
+
+```bash
+ID_VENDOR_ID=xxxx
+ID_MODEL_ID=yyyy
+ID_SERIAL_SHORT=zzzz
+```
+
+Create a rule file:
+
+```bash
+sudo nano /etc/udev/rules.d/99-openarm-ker.rules
+```
+
+Add a rule like this, replacing `xxxx`, `yyyy`, and `zzzz` with your device's
+actual values:
+
+```udev
+SUBSYSTEM=="tty", ATTRS{idVendor}=="xxxx", ATTRS{idProduct}=="yyyy", ATTRS{serial}=="zzzz", SYMLINK+="m5_ker_485", GROUP="dialout", MODE="0660"
+```
+
+If you do not need to distinguish between multiple devices of the same model,
+you can omit `ATTRS{serial}=="zzzz"`. For a personal development machine, you can instead
+use `MODE="0666"` and omit `GROUP` to allow all local users to access it.
+
+Reload the rules:
+
+```bash
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
+
+Then reconnect the device and check that the stable device name was created:
+
+```bash
+ls -l /dev/m5_ker_485
+```
+
+You can then use `/dev/m5_ker_485` as the serial device path.
+
+
 ### Sample usage
 
 ```python
@@ -23,9 +92,9 @@ import openarm_ker
 
 m5_port = openarm_ker.M5Port("/dev/ttyACM0")
 
-leader_joint_names = [f"arm_joint{i}" for i in range(1, 9)]
+leader_joint_names = [f"right_arm_joint{i}" for i in range(1, 9)]
 mapper = openarm_ker.Mapper(
-    mappingyaml_path="/path/to/mapping_m5.yaml",
+    mappingyaml_path="mapping_m5.yaml",
     leader_joint_names=leader_joint_names,
     mapping_key="right_arm_mappings",
 )
@@ -37,7 +106,11 @@ follower_position = mapper.map(np.deg2rad(leader_position))
 
 ### Mapper config
 
-Please refer to [config/](config/), the default configurations.
+The main M5 mapping file is `src/openarm_ker/config/mapping_m5.yaml` in this
+repository. It is bundled in the installed package under `openarm_ker/config/`,
+so you can pass the bundled filename `mapping_m5.yaml`, or pass an explicit path
+to a custom YAML file. For the left arm, use `left_arm_joint*` leader names with
+`mapping_key="left_arm_mappings"`.
 
 ## Related links
 
