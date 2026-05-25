@@ -14,6 +14,12 @@
 
 """Joint mapper."""
 
+from __future__ import annotations
+
+import importlib.resources
+from importlib.resources.abc import Traversable
+from pathlib import Path
+
 import yaml
 import numpy as np
 
@@ -23,13 +29,14 @@ class Mapper:
 
     def __init__(
         self,
-        mappingyaml_path: str,
+        mappingyaml_path: str | Path,
         leader_joint_names: list[str],
         mapping_key: str,
     ):
         """Initialize joint mapper."""
         # Load YAML configuration
-        with open(mappingyaml_path) as f:
+        mappingyaml_file = self._resolve_path(mappingyaml_path)
+        with mappingyaml_file.open() as f:
             full_config = yaml.safe_load(f)
 
         if mapping_key not in full_config:
@@ -76,6 +83,28 @@ class Mapper:
                 raise ValueError(f"Invalid mech_limits for joint '{f_name}'.")
 
         self.TWO_PI = 2 * np.pi
+
+    @staticmethod
+    def _resolve_path(mappingyaml_path: str | Path) -> Path | Traversable:
+        """Resolve a user path or bundled config filename."""
+        path = Path(mappingyaml_path)
+        if path.exists():
+            if path.is_file():
+                return path
+            raise FileNotFoundError(f"Mapping YAML path is not a file: {path}")
+
+        if len(path.parts) == 1:
+            resource = importlib.resources.files("openarm_ker").joinpath(
+                "config", path.name
+            )
+            if resource.is_file():
+                return resource
+
+        raise FileNotFoundError(
+            f"Mapping YAML file not found: {mappingyaml_path}. "
+            "Pass an existing file path or a bundled config filename under "
+            "openarm_ker/config/."
+        )
 
     def __map_range(self, in_min, in_max, out_min, out_max, val):
         """Map value from one range to another."""
