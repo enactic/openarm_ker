@@ -17,6 +17,7 @@
 from __future__ import annotations
 
 import importlib.resources
+from importlib.resources.abc import Traversable
 from pathlib import Path
 
 import yaml
@@ -34,10 +35,9 @@ class Mapper:
     ):
         """Initialize joint mapper."""
         # Load YAML configuration
-        mappingyaml_resource = self._resolve_path(mappingyaml_path)
-        with importlib.resources.as_file(mappingyaml_resource) as mappingyaml_file:
-            with mappingyaml_file.open() as f:
-                full_config = yaml.safe_load(f)
+        mappingyaml_file = self._resolve_path(mappingyaml_path)
+        with mappingyaml_file.open() as f:
+            full_config = yaml.safe_load(f)
 
         if mapping_key not in full_config:
             raise ValueError(f"Section '{mapping_key}' not found in YAML.")
@@ -85,18 +85,26 @@ class Mapper:
         self.TWO_PI = 2 * np.pi
 
     @staticmethod
-    def _resolve_path(mappingyaml_path: str | Path):
+    def _resolve_path(mappingyaml_path: str | Path) -> Path | Traversable:
         """Resolve a user path or bundled config filename."""
         path = Path(mappingyaml_path)
         if path.exists():
-            return path
+            if path.is_file():
+                return path
+            raise FileNotFoundError(f"Mapping YAML path is not a file: {path}")
 
         if len(path.parts) == 1:
-            return importlib.resources.files("openarm_ker").joinpath(
+            resource = importlib.resources.files("openarm_ker").joinpath(
                 "config", path.name
             )
+            if resource.is_file():
+                return resource
 
-        return path
+        raise FileNotFoundError(
+            f"Mapping YAML file not found: {mappingyaml_path}. "
+            "Pass an existing file path or a bundled config filename under "
+            "openarm_ker/config/."
+        )
 
     def __map_range(self, in_min, in_max, out_min, out_max, val):
         """Map value from one range to another."""

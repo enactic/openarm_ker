@@ -34,7 +34,9 @@ sudo chmod 666 /dev/ttyACM0
 ```
 
 This usually resets after the device is unplugged or the device node is
-recreated.
+recreated. Use this only as a short-lived local test because it makes the device
+writable by every local user. For regular use, prefer the `dialout` group or a
+udev rule with `MODE="0660"`.
 
 To use a stable device name such as `/dev/m5_ker_485`, create a udev rule.
 First inspect the device properties:
