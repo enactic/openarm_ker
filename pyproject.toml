@@ -34,7 +34,7 @@ dependencies = [
 ]
 
 [project.scripts]
-ker-cli = "openarm_ker.cli:main"
+openarm-ker-cli = "openarm_ker.cli:main"
 
 [project.urls]
 changelog = "https://github.com/enactic/openarm_ker/releases"

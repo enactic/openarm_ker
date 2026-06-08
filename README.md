@@ -1,7 +1,9 @@
 # OpenArm KER
+
 A teleoperation system for OpenArm robots using KER (Kinematic Equivalent Replica).
 
 ## Features
+
 - **Joint mapping**: Flexible configuration-based mapping from leader to follower joints
 - **USB communication**: Interface with M5Stack CoreS3 via USB vendor mode
 
@@ -51,7 +53,7 @@ uv pip install openarm_ker
 Plug the M5Stack CoreS3 into your PC via USB and run:
 
 ```bash
-ker-cli ping
+openarm-ker-cli ping
 ```
 
 Expected output:
@@ -84,23 +86,27 @@ with KERStream(transport="usb") as stream:
 
 ```bash
 # Check device connection and fetch schema
-ker-cli ping
+openarm-ker-cli ping
 
 # Stream raw data to terminal
-ker-cli stream
+openarm-ker-cli stream
 
 # Serial transport
-ker-cli stream --transport serial --port /dev/m5_ker_485 --baud 2000000
+openarm-ker-cli stream --transport serial --port /dev/m5_ker_485 --baud 2000000
 ```
 
 ## Related Links
+
 - 📚 Read the [documentation](https://docs.openarm.dev/software/can/)
 - 💬 Join the community on [Discord](https://discord.gg/FsZaZ4z3We)
 - 📬 Contact us through <openarm@enactic.ai>
 
 ## License
+
 Licensed under the Apache License 2.0. See [LICENSE.txt](LICENSE.txt) for details.
+
 Copyright 2026 Enactic, Inc.
 
 ## Code of Conduct
+
 All participation in the OpenArm project is governed by our [Code of Conduct](CODE_OF_CONDUCT.md).
