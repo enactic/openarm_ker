@@ -30,7 +30,6 @@ dependencies = [
     "PyYAML>=5.4.0",
     "pyusb",
     "pyserial",
-    "openarm-can>=0.1.0",
 ]
 
 [project.scripts]
