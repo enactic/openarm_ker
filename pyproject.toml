@@ -19,7 +19,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "openarm_ker"
 description = "Teleoperation system for OpenArm robots using KER devices"
-version = "0.1.0"
+version = "0.2.0"
 authors = [{name = "Enactic, Inc."}]
 license = {text = "Apache-2.0"}
 readme = "README.md"
