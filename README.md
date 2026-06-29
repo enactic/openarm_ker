@@ -97,7 +97,7 @@ openarm-ker-cli stream --transport serial --port /dev/m5_ker_485 --baud 2000000
 
 ## Related Links
 
-- 📚 Read the [documentation](https://docs.openarm.dev/software/can/)
+- 📚 Read the [documentation](https://docs.openarm.dev/hardware/openarm-ker/general)
 - 💬 Join the community on [Discord](https://discord.gg/FsZaZ4z3We)
 - 📬 Contact us through <openarm@enactic.ai>
 
