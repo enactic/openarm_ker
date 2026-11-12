@@ -34,22 +34,12 @@ CMD_PING = b"\x00"
 CMD_STANDBY = b"\x01"
 CMD_STREAM = b"\x02"
 CMD_ZERO_ALL = b"\x03"
-CMD_DIAG = b"\x05"
 
-# Diagnostics are polled rather than streamed, so they cost nothing until asked
-# for. Layouts below match buildDiagPayload() in the M5 firmware.
 # Window over which the frame rate is measured.
 RATE_WINDOW_S = 0.5
 
 RECONNECT_BACKOFF_MIN_S = 0.5
 RECONNECT_BACKOFF_MAX_S = 4.0
-
-DIAG_HEAD_FMT = "<BBBBHHHbBfHHHIIIIIII"
-DIAG_CH_FMT = "<BBHIH"
-
-CH_STATE_NAMES = {0: "INIT", 1: "OK", 2: "STALE", 3: "HELD", 4: "SUSPECT"}
-PROTO_NAMES = {0: "auto", 1: "crc6", 2: "legacy"}
-FAULT_POLICY_NAMES = {0: "HOLD", 1: "FREEZE_ALL", 2: "STOP"}
 
 TYPE_MAP = {
     0: ("I", 4, "UINT32"),
