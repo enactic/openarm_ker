@@ -47,8 +47,6 @@ DIM, RED, YELLOW, GREEN, CYAN, BOLD, RESET = (
 
 _ANSI_RE = re.compile(r"\033\[[0-9;?]*[A-Za-z]")
 
-DIAG_INTERVAL_S = 0.25
-
 BAR_WIDTH = 13
 ANGLE_LIMIT = 180.0
 
@@ -135,22 +133,15 @@ def _row(
     errored: bool,
     style: _Style,
     show_bar: bool,
-    state_name: str | None = None,
 ) -> str:
-    """Format one channel: name, angle, optional bar, and its state.
-
-    When diagnostics are available the state column names the actual reason
-    (STALE / HELD / SUSPECT) rather than a generic "frozen", which is the
-    difference between "something is wrong" and knowing what to go and check.
-    """
+    """Format one channel: name, angle, optional bar, and its state."""
     label = style(f"{name:<{_W_LABEL}}", BOLD)
 
     if errored:
         # Keep the last known angle visible - it is what the follower is being
         # commanded to - but say plainly that it is not a live reading.
         angle_txt = style(f"{angle:>+{_W_ANGLE}.2f}", DIM)
-        word = (state_name or "FROZEN")[:_W_STATE]
-        state = style(f"{word:<{_W_STATE}}", RED, BOLD)
+        state = style(f"{'FROZEN':<{_W_STATE}}", RED, BOLD)
     else:
         angle_txt = f"{angle:>+{_W_ANGLE}.2f}"
         # Nothing to say about a healthy channel. Sixteen rows of "ok" only
@@ -180,14 +171,8 @@ def _render(
     """Build the live view for one frame."""
     stats = stream.stats()
     meta = stream.metadata
-    # Firmware built with STREAM_COMPACT_ANGLES sends hundredths of a degree as
-    # int16, which halves the frame and gets it under one USB packet.
-    angles = data.get("angles")
-    if angles is None:
-        compact = data.get("angles_cd")
-        angles = [v / 100.0 for v in compact] if compact else []
+    angles = data.get("angles") or []
     count = len(angles)
-    diag = None
 
     # Newer firmware packs the flags into one 16-bit mask; sixteen booleans
     # cost sixteen bytes per frame to carry sixteen bits. Accept either.
@@ -201,11 +186,6 @@ def _render(
 
         def is_err(i: int) -> bool:
             return bool(mask >> i & 1)
-
-    ch_diag = (diag or {}).get("channels") or []
-
-    def state_of(i: int) -> str | None:
-        return ch_diag[i]["state"] if i < len(ch_diag) else None
 
     width = max(40, min(columns - 1, 100))
 
@@ -263,8 +243,8 @@ def _render(
         (lname, litems), (rname, ritems) = groups
         lines.append(style(f"{lname:<{cell_w + _COL_GAP}}{rname}", BOLD, CYAN))
         for (li, ln), (ri, rn) in zip(litems, ritems):
-            left = _row(ln, angles[li], is_err(li), style, show_bar, state_of(li))
-            right = _row(rn, angles[ri], is_err(ri), style, show_bar, state_of(ri))
+            left = _row(ln, angles[li], is_err(li), style, show_bar)
+            right = _row(rn, angles[ri], is_err(ri), style, show_bar)
             lines.append(
                 left.rstrip()
                 + " " * (cell_w - len(_strip(left).rstrip()) + _COL_GAP)
@@ -274,35 +254,9 @@ def _render(
         for gname, items in groups:
             lines.append(style(gname, BOLD, CYAN))
             for i, n in items:
-                lines.append(
-                    _row(n, angles[i], is_err(i), style, show_bar, state_of(i)).rstrip()
-                )
+                lines.append(_row(n, angles[i], is_err(i), style, show_bar).rstrip())
 
     lines.append("")
-
-    if diag:
-        # The chain round-trip is the one number that says whether the 1 ms
-        # budget is really met; everything else about the timing is estimate.
-        chain = (
-            f"chain {diag['chain_us']}us"
-            f" (min {diag['chain_us_min']} / max {diag['chain_us_max']})"
-        )
-        over = diag["chain_us_max"] > 1000
-        lines.append(
-            (style(chain, YELLOW, BOLD) if over else style(chain, DIM))
-            + style(f"   policy {diag['fault_policy']}", DIM)
-        )
-        lines.append(
-            style(
-                f"bus  frame_err {diag['frame_errors']}"
-                f"  unknown_id {diag['unknown_id']}"
-                f"  heal {diag.get('heal_triggers', 0)}"
-                f"   usb sent {diag['usb_sent']}"
-                f" drop {diag['usb_dropped']} stall {diag['usb_stall']}",
-                DIM,
-            )
-        )
-        lines.append("")
 
     bad = [i for i in range(count) if is_err(i)]
     if bad:
@@ -316,16 +270,7 @@ def _render(
 
         for i in shown:
             head = f"! {_channel_name(i, count):<12}"
-            if i < len(ch_diag):
-                c = ch_diag[i]
-                detail = (
-                    f"{c['state']:<8} crc_err {c['crc_errors']:<6}"
-                    f" rx {c['rx_count']:<9} age {c['age_ms']}ms"
-                    f"  proto {c['proto']}"
-                )
-            else:
-                detail = "not live (value frozen)"
-            lines.append(style(head + detail, RED, BOLD))
+            lines.append(style(head + "not live (value frozen)", RED, BOLD))
 
         if cascade:
             first = _channel_name(bad[0], count)
@@ -339,10 +284,6 @@ def _render(
         elif len(bad) > len(shown):
             rest = ", ".join(_channel_name(i, count) for i in bad[len(shown) :])
             lines.append(style(f"  -> also {rest}", RED))
-    elif diag and diag.get("host_lost"):
-        lines.append(
-            style("! PC not reading - the device stopped streaming", RED, BOLD)
-        )
     else:
         lines.append(style("all channels live", DIM))
 
@@ -419,25 +360,12 @@ def _cmd_stream(stream: KERStream) -> int:
     if interactive:
         sys.stdout.write(CSI + "2J" + CSI + "H" + CSI + "?25l")
 
-    last_diag = 0.0
-
     try:
         while stream.is_connected:
             data = stream.latest()
             if data is None:
                 time.sleep(0.02)
                 continue
-
-            # Diagnostics are polled, so the rate is ours to choose: often
-            # enough to be useful, rare enough to stay invisible beside the
-            # data stream.
-            now = time.monotonic()
-            if now - last_diag >= DIAG_INTERVAL_S:
-                last_diag = now
-                try:
-                    stream.request_diagnostics()
-                except Exception:
-                    pass
 
             columns = shutil.get_terminal_size((80, 24)).columns
             lines = _render(stream, data, style, columns)
